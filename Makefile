@@ -1,4 +1,6 @@
-all:
+all: build check
+
+build:
 	go build gf-add.go
 	go build gf-get.go
 

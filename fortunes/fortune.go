@@ -1,14 +1,11 @@
 package fortunes
 
-func GetFortune() string {
-	return `This is a joke
-[jokes]
-`
+func GetFortune(db FortunesManager, category string) string {
+	return db.GetFortune(category)
 }
 
-func AddFortune() {
+func AddFortune(db FortunesManager, text string, category string) {
+	db.AddFortune(text, category)
 }
 
-func Foo() {
-}
 
