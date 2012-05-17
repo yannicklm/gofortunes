@@ -1,7 +1,8 @@
 package fortunes
 
 type FortunesManager interface {
-	GetFortune(category string) string
-	AddFortune(text string, category string)
-	GetCategories() []string
+	GetFortune() (fortune string, category string, err error)
+	GetFortuneByCategory(category string) (string, error)
+	AddFortune(text string, category string) error
+	GetCategories() ([]string, error)
 }

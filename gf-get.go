@@ -1,21 +1,36 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"gofortunes/fortunes"
 	"os"
 )
 
+func usage() {
+	fmt.Println("Usage: %s DB_PATH [CATEGORY]", os.Args[0])
+	os.Exit(2)
+}
+
 func main() {
-	var baseDir = flag.String("db-path", "", "fortune base dir")
-	flag.Parse()
-	if *baseDir == "" {
-		fmt.Println("--db-path flag is required")
-		os.Exit(2)
+	var fortune, baseDir, category string
+	var err error
+	if len(os.Args) < 2 || len(os.Args) > 3 {
+		usage()
+	}
+	baseDir = os.Args[1]
+	if len(os.Args) == 3 {
+		category = os.Args[2]
 	}
 	db := new(fortunes.FortunesDB)
-	db.BaseDir = *baseDir
-	var s = fortunes.GetFortune(db, "jokes")
-	fmt.Printf("Got this fortune: %s", s)
+	db.BaseDir = baseDir
+	if category == "" {
+		fortune, category, err = fortunes.GetFortune(db)
+	} else {
+		fortune, err = fortunes.GetFortuneByCategory(db, category)
+	}
+	if err != nil {
+		fmt.Printf("Error occured: %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("%s\n[%s]\n", fortune, category)
 }

@@ -1,11 +1,15 @@
 package fortunes
 
-func GetFortune(db FortunesManager, category string) string {
-	return db.GetFortune(category)
+func GetFortune(db FortunesManager) (fortune string, category string, err error) {
+	return db.GetFortune()
 }
 
-func AddFortune(db FortunesManager, text string, category string) {
-	db.AddFortune(text, category)
+func GetFortuneByCategory(db FortunesManager, category string) (string, error) {
+	return db.GetFortuneByCategory(category)
+}
+
+func AddFortune(db FortunesManager, text string, category string) error {
+	return db.AddFortune(text, category)
 }
 
 
