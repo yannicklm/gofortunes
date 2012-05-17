@@ -8,16 +8,15 @@ import (
 )
 
 
-func setupDB() *FortunesDB {
+func setupDB() (*FortunesDB, string) {
 	tmp, _ := ioutil.TempDir("", "gf-db-test")
-	db := new(FortunesDB)
-	db.BaseDir = tmp
-	return db
+	db := NewDB(tmp)
+	return db, tmp
 }
 
 func Test_EmptyDB(t *testing.T) {
-	db := setupDB()
-	defer os.RemoveAll(db.BaseDir)
+	db, tmp := setupDB()
+	defer os.RemoveAll(tmp)
 	s, err := db.GetFortuneByCategory("jokes")
 	if s != "" {
 		t.Errorf("Fortune returned by new db not empty\nGot %s", s)
@@ -33,8 +32,8 @@ func Test_EmptyDB(t *testing.T) {
 }
 
 func Test_AddOneQuote(t *testing.T) {
-	db := setupDB()
-	defer os.RemoveAll(db.BaseDir)
+	db, tmp := setupDB()
+	defer os.RemoveAll(tmp)
 	quote := "This is a quote"
 	err := db.AddFortune(quote, "quote")
 	if err != nil {
@@ -43,7 +42,7 @@ func Test_AddOneQuote(t *testing.T) {
 
 	got, err := db.GetFortuneByCategory("quote")
 	if err != nil {
-		t.Error("Error when getting quote: %s", err)
+		t.Error("Error when getting quote:", err)
 	}
 	if got != quote {
 		t.Errorf("got '%s', expecting '%s'", got, quote)
@@ -51,8 +50,8 @@ func Test_AddOneQuote(t *testing.T) {
 }
 
 func Test_AddJokeAndQuote(t *testing.T) {
-	db := setupDB()
-	defer os.RemoveAll(db.BaseDir)
+	db, tmp := setupDB()
+	defer os.RemoveAll(tmp)
 	quote := "This is a quote"
 	db.AddFortune(quote, "quotes")
 	joke := "This is a joke"
@@ -82,8 +81,8 @@ func Test_AddJokeAndQuote(t *testing.T) {
 }
 
 func Test_AddQuotes(t *testing.T) {
-	db := setupDB()
-	defer os.RemoveAll(db.BaseDir)
+	db, tmp := setupDB()
+	defer os.RemoveAll(tmp)
 	quotes := []string{"First quote", "Second quote"}
 	for _, quote := range quotes {
 		db.AddFortune(quote, "quotes")
@@ -93,8 +92,8 @@ func Test_AddQuotes(t *testing.T) {
 }
 
 func Test_GetNoSuchCategory(t *testing.T) {
-	db := setupDB()
-	defer os.RemoveAll(db.BaseDir)
+	db, tmp := setupDB()
+	defer os.RemoveAll(tmp)
 	_, err := db.GetFortuneByCategory("doesnotexists")
 	if !strings.Contains(err.Error(), "No such category") {
 		t.Errorf("Wrong error message:\n %s", err)

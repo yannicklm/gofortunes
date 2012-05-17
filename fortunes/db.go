@@ -5,14 +5,24 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"time"
 	"path"
+	"math/rand"
 	"strings"
 )
 
 type FortunesDB struct {
-	BaseDir string
+	baseDir string
 }
 
+
+func NewDB(baseDir string) *FortunesDB {
+	res := new(FortunesDB)
+	res.baseDir = baseDir
+	now := time.Now()
+	rand.Seed(int64(now.Nanosecond()))
+	return res
+}
 
 
 func (db *FortunesDB) GetFortune() (fortune string, category string, err error) {
@@ -32,7 +42,7 @@ func (db *FortunesDB) GetFortune() (fortune string, category string, err error) 
 }
 
 func (db *FortunesDB) GetFortuneByCategory(category string) (string, error) {
-	toRead := path.Join(db.BaseDir, category)
+	toRead := path.Join(db.baseDir, category)
 	fi, err := os.Stat(toRead)
 	if err != nil {
 		return "", errors.New("No such category: " + category)
@@ -54,18 +64,30 @@ func (db *FortunesDB) GetFortuneByCategory(category string) (string, error) {
 		return "", io.ErrShortBuffer
 	}
 
+	if len(data) < 2 {
+		return "", errors.New("No fortune in this category: " + category)
+	}
+
+	// Remove last '%\n'
+	if data[len(data)-2] == '%' && data[len(data)-1] == '\n' {
+		data = data[:len(data)-2]
+	}
+
 	text := string(data)
 	fortunes := strings.Split(text, "%\n")
 	fortune, err := RandChoice(fortunes)
 	if err != nil {
 		return "", err
 	}
-	data = []byte(fortune)
-	return string(data[:len(data)-1]), nil
+	fortune = strings.TrimRight(fortune, "\n")
+	if fortune == "" {
+		return "", errors.New("fortune was empty (in category: " + category + ")")
+	}
+	return fortune, nil
 }
 
 func (db *FortunesDB) AddFortune(text string, category string) error {
-	toWrite := path.Join(db.BaseDir, category)
+	toWrite := path.Join(db.baseDir, category)
 	f, err := os.OpenFile(toWrite, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return err
@@ -88,7 +110,7 @@ func (db *FortunesDB) AddFortune(text string, category string) error {
 
 func (db *FortunesDB) GetCategories() ([]string, error) {
 	res := make([]string, 0)
-	list, err := ioutil.ReadDir(db.BaseDir)
+	list, err := ioutil.ReadDir(db.baseDir)
 	if err != nil {
 		return []string{}, err
 	}

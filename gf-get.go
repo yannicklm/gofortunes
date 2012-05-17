@@ -21,8 +21,7 @@ func main() {
 	if len(os.Args) == 3 {
 		category = os.Args[2]
 	}
-	db := new(fortunes.FortunesDB)
-	db.BaseDir = baseDir
+	db := fortunes.NewDB(baseDir)
 	if category == "" {
 		fortune, category, err = fortunes.GetFortune(db)
 	} else {

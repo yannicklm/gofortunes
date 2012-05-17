@@ -61,8 +61,7 @@ func main() {
 	baseDir  := os.Args[1]
 	category := os.Args[2]
 
-	db := new(fortunes.FortunesDB)
-	db.BaseDir = baseDir
+	db := fortunes.NewDB(baseDir)
 
 	text, err := readFortune()
 	if err != nil {
