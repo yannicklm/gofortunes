@@ -21,4 +21,5 @@ func init() {
 	http.HandleFunc("/add", Add)
 	http.HandleFunc("/restoreForm", RestoreForm)
 	http.HandleFunc("/restore", Restore)
+	http.HandleFunc("/restoreTask", RestoreTask)
 }

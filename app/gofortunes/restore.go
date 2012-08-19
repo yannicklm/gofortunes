@@ -3,9 +3,8 @@ package gofortunes
 import (
 	"appengine"
 	"appengine/blobstore"
+	"appengine/taskqueue"
 	"html/template"
-	"io"
-	"fmt"
 	"net/http"
 )
 
@@ -37,15 +36,28 @@ func Restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	blobKey := file[0].BlobKey
-	blobReader := blobstore.NewReader(c, blobKey)
-	restoreFromReader(blobReader)
+	key := string(blobKey)
+	t := taskqueue.NewPOSTTask("/restoreTask",
+		map[string][]string{"blobKey": {key}})
+	_, err = taskqueue.Add(c, t, "")
+	if err != nil {
+		c.Errorf("Could not add task. Error was: %v", err)
+		return
+	}
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func restoreFromReader(r io.Reader) {
-	data := make([]byte, 100)
-	r.Read(data)
-	fmt.Printf("read 100 bytes: %s", string(data))
+func RestoreTask(w http.ResponseWriter, r *http.Request) {
+	blobKey := appengine.BlobKey(r.FormValue("blobKey"))
+	c := appengine.NewContext(r)
+	blobInfo, err := blobstore.Stat(c, blobKey)
+	if err != nil {
+		c.Errorf("%v", err)
+		return
+	}
+	c.Infof("Restoring from %s", blobInfo.Filename)
+	reader := blobstore.NewReader(c, blobKey)
+	LoadDB(c, reader)
 }
 
 var restoreFormTemplate = template.Must(template.New("root").Parse(restoreFormTemplateHTML))
