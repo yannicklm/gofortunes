@@ -3,14 +3,25 @@ package main
 import (
 	"bytes"
 	"errors"
-	"gofortunes/fortunes"
 	"fmt"
+	"net/url"
+	"net/http"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 )
+
+func die(err string) {
+	fmt.Fprintf(os.Stderr, err + "\n")
+	os.Exit(1)
+}
+
+func usage() {
+	fmt.Printf("Usage: %s URL CATEGORY\n", os.Args[0])
+	os.Exit(2)
+}
 
 func readFortune() (string, error) {
 	tmpdir, err := ioutil.TempDir("", "gf-add")
@@ -49,24 +60,38 @@ func readFortune() (string, error) {
 	return string(data), nil
 }
 
-func usage() {
-	fmt.Println("Usage: %s DB_PATH CATEGORY", os.Args[0])
-	os.Exit(2)
-}
 
 func main() {
 	if len(os.Args) != 3 {
 		usage()
 	}
-	baseDir  := os.Args[1]
+	srvUrl  := os.Args[1]
 	category := os.Args[2]
-
-	db := fortunes.NewDB(baseDir)
 
 	text, err := readFortune()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fortunes.AddFortune(db, text, category)
+
+	resp, err := http.PostForm(srvUrl+ "/add",
+		url.Values{
+			"text" : {text},
+			"category" : {category},
+		})
+
+	if err != nil {
+		die(err.Error())
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		die(err.Error())
+	}
+	if resp.StatusCode != http.StatusOK {
+		die(resp.Status + "\n" + string(body))
+	}
+
+	fmt.Printf("Added new quote:\n%s\n[%s]\n", text, category)
 }

@@ -77,7 +77,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if count == 0 {
-		mess := fmt.Sprint("No fortune matching %s", categoryName)
+		mess := fmt.Sprintf("No fortune matching %s", categoryName)
 		http.Error(w, mess, http.StatusInternalServerError)
 		return
 	}
