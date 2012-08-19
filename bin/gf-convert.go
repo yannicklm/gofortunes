@@ -96,6 +96,9 @@ func getFortunes(dbPath string, category string) []string {
 }
 
 func addFortune(srvUrl string, category string, fortune string) {
+	if len(fortune) > 400 {
+		return
+	}
 	resp, err := http.PostForm(srvUrl+"/add", url.Values{
 		"text":     {fortune},
 		"category": {category},
